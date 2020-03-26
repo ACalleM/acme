@@ -1,0 +1,233 @@
+kind: Template
+metadata:
+  name: template-srv-nuc-jee-v4
+  namespace: acoc-inte-bck
+objects:
+  - apiVersion: v1
+    kind: Service
+    metadata:
+      annotations:
+        openshift.io/generated-by: OpenShiftNewApp
+      labels:
+        app: '${APPLICATION_NAME}'
+      name: '${APPLICATION_NAME}'
+    spec:
+      ports:
+        - name: 8080-tcp
+          port: 8080
+          protocol: TCP
+          targetPort: 8080
+        - name: 8443-tcp
+          port: 8443
+          protocol: TCP
+          targetPort: 8443
+      selector:
+        app: '${APPLICATION_NAME}'
+        deploymentconfig: '${APPLICATION_NAME}'
+      sessionAffinity: None
+      type: ClusterIP
+    status:
+      loadBalancer: {}
+  - apiVersion: v1
+    kind: DeploymentConfig
+    metadata:
+      annotations:
+        openshift.io/generated-by: OpenShiftNewApp
+      generation: 30
+      labels:
+        app: '${APPLICATION_NAME}'
+      name: '${APPLICATION_NAME}'
+    spec:
+      replicas: '${{NUM_REPLICAS}}'
+      revisionHistoryLimit: 5
+      selector:
+        app: '${APPLICATION_NAME}'
+        deploymentconfig: '${APPLICATION_NAME}'
+      strategy:
+        activeDeadlineSeconds: 21600
+        resources: {}
+        recreateParams:
+          timeoutSeconds: '${{DEPLOYMENT_TIMEOUT}}'
+        rollingParams:
+          intervalSeconds: 1
+          maxSurge: '${{ROLLING_MAX_SURGE}}'
+          maxUnavailable: '${{ROLLING_MAX_UNAVAILABLE}}'
+          timeoutSeconds: '${{DEPLOYMENT_TIMEOUT}}'
+          updatePeriodSeconds: 1
+        type: '${DEPLOYMENT_STRATEGY}'
+      template:
+        metadata:
+          annotations:
+            openshift.io/generated-by: OpenShiftNewApp
+            prometheus.io/path: /actuator/prometheus
+            prometheus.io/port: '8080'
+            prometheus.io/scheme: http
+            prometheus.io/scrape: 'true'
+          labels:
+            app: '${APPLICATION_NAME}'
+            deploymentconfig: '${APPLICATION_NAME}'
+        spec:
+          containers:
+            - env:
+                - name: GC_MAX_METASPACE_SIZE
+                  value: '${GC_MAX_METASPACE_SIZE}'
+                - name: JAVA_INITIAL_MEM_RATIO
+                  value: '${JAVA_INITIAL_MEM_RATIO}'
+                - name: JAVA_MAX_MEM_RATIO
+                  value: '${JAVA_MAX_MEM_RATIO}'
+                - name: SPRING_MAIN_BANNERMODE
+                  value: 'off'
+                - name: SPRING_PROFILES_ACTIVE
+                  value: openshift
+                - name: TAP_CACHE_CONFIGFILE
+                  value: /data/config/coherence_cache_config.xml
+                - name: TAP_CONFIGSERVER_CONNECTIONSTRING
+                  value: '${TAP_CONFIG_SERVER_CONNECTION_STRING}'
+              image: '${APPLICATION_NAME}:${VERSION_TAG}'
+              imagePullPolicy: IfNotPresent
+              livenessProbe:
+                failureThreshold: 6
+                httpGet:
+                  path: /actuator/health/alive
+                  port: 8080
+                  scheme: HTTP
+                initialDelaySeconds: 120
+                periodSeconds: 20
+                successThreshold: 1
+                timeoutSeconds: 5
+              name: 'msv-${APPLICATION_NAME}'
+              ports:
+                - containerPort: 8080
+                  protocol: TCP
+                - containerPort: 8443
+                  protocol: TCP
+              readinessProbe:
+                failureThreshold: 2
+                httpGet:
+                  path: /actuator/health/ready
+                  port: 8080
+                  scheme: HTTP
+                initialDelaySeconds: 10
+                periodSeconds: 20
+                successThreshold: 1
+                timeoutSeconds: 5
+              resources:
+                limits:
+                  cpu: '${CPU_LIMIT}'
+                  memory: '${MEMORY_LIMIT}'
+                requests:
+                  cpu: '${CPU_REQUEST}'
+                  memory: '${MEMORY_REQUEST}'
+              terminationMessagePath: /dev/termination-log
+              terminationMessagePolicy: File
+              volumeMounts:
+                - mountPath: /data/config
+                  name: tapv4-config
+          dnsPolicy: ClusterFirst
+          restartPolicy: Always
+          schedulerName: default-scheduler
+          securityContext: {}
+          terminationGracePeriodSeconds: 30
+          volumes:
+            - configMap:
+                defaultMode: 420
+                name: tapv4-config
+              name: tapv4-config
+      test: false
+      triggers:
+        - imageChangeParams:
+            automatic: false
+            containerNames:
+              - 'msv-${APPLICATION_NAME}'
+            from:
+              kind: ImageStreamTag
+              name: '${APPLICATION_NAME}:${VERSION_TAG}'
+          type: ImageChange
+  - apiVersion: v1
+    kind: Route
+    metadata:
+      labels:
+        app: '${APPLICATION_NAME}'
+      name: '${APPLICATION_NAME}'
+    spec:
+      host: '${APPLICATION_NAME}-${NAMESPACE}${DOMAIN_SUFFIX}'
+      port:
+        targetPort: 8080-tcp
+      to:
+        kind: Service
+        name: '${APPLICATION_NAME}'
+        weight: 100
+      wildcardPolicy: None
+parameters:
+  - description: The name for the application.
+    name: APPLICATION_NAME
+    required: true
+  - description: Version tag
+    name: VERSION_TAG
+    required: true
+  - description: Replicas of the service
+    name: NUM_REPLICAS
+    required: true
+    value: '1'
+  - description: 'Current namespace e.g.: acoc-inte-bck'
+    name: NAMESPACE
+    required: true
+  - description: >-
+      Domain suffix where to expose the route (starting with dot) e.g.:
+      .be.ocjc.serv.dev.dc.es.telefonica
+    name: DOMAIN_SUFFIX
+    required: true
+    value: '.be.ocjc.serv.dev.dc.es.telefonica'
+  - description: The initial cpu for the application.
+    name: CPU_REQUEST
+    required: true
+    value: '100m'
+  - description: The initial memory for the application.
+    name: MEMORY_REQUEST
+    required: true
+    value: '128Mi'
+  - description: The cpu limit for the application.
+    name: CPU_LIMIT
+    required: true
+    value: '500m'
+  - description: The memory limit for the application.
+    name: MEMORY_LIMIT
+    required: true
+    value: '512Mi'
+  - description: Maximun metaspace size for jvm
+    name: GC_MAX_METASPACE_SIZE
+    required: true
+    value: '250'
+  - description: Ratio of -Xms. 100 to set mx and ms to the same
+    name: JAVA_INITIAL_MEM_RATIO
+    required: true
+    value: '100'
+  - description: Ratio of -Xmx with whole container mem.
+    name: JAVA_MAX_MEM_RATIO
+    required: true
+    value: '75'
+  - description: >-
+      Connection to tap server (zookeeper) e.g. enhol267.serv.dev.dc.es.telefonica:33302
+    name: TAP_CONFIG_SERVER_CONNECTION_STRING
+    required: true
+    value: 'enhol267.serv.dev.dc.es.telefonica:33301,enhol267.serv.dev.dc.es.telefonica:33302,enhol267.serv.dev.dc.es.telefonica:33303'
+  - description: Deployment stratey for the application (Recreate or Rolling)
+    name: DEPLOYMENT_STRATEGY
+    required: true
+    value: 'Recreate'
+  - description: How long to wait for a pod to scale up before giving up.
+    name: DEPLOYMENT_TIMEOUT
+    required: true
+    value: '600'
+  - description: >-
+      The maximum number of pods that can be scheduled above the original number of pods while the rolling deployment is in progress.
+      This can be either a percentage (10%) or a whole number (1).
+    name: ROLLING_MAX_SURGE
+    required: true
+    value: '25%'
+  - description: >-
+      The maximum number of pods that can be unavailable during the rolling deployment.
+      This can be either a percentage (10%) or a whole number (1)
+    name: ROLLING_MAX_UNAVAILABLE
+    required: true
+    value: '25%'
