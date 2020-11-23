@@ -1,0 +1,64 @@
+kind: Template
+metadata:
+  name: template-configmap-tapv4-config-v1
+  namespace: acoc-desa-bck
+objects:
+  - apiVersion: v1
+    data:
+      coherence_cache_config.xml: "<?xml version=\"1.0\"?>\n<cache-config xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"
+        xmlns=\"http://xmlns.oracle.com/coherence/coherence-cache-config\" xsi:schemaLocation=\"http://xmlns.oracle.com/coherence/coherence-cache-config
+        coherence-cache-config.xsd\">\n\n    <scope-name>telefonica.coherence.20200303</scope-name>\n\n
+        \   <caching-scheme-mapping>\n\n        <!-- CACHE UDDI (ENDPOINTS OSR) -->\n
+        \       <cache-mapping>\n            <cache-name>CACHE_UDDI</cache-name>\n            <scheme-name>cohi-proxy</scheme-name>\n
+        \       </cache-mapping>\n\n        <!-- CACHE SEGURIDAD -->\n        <cache-mapping>\n
+        \           <cache-name>CACHE_SEGU</cache-name>\n            <scheme-name>cohi-proxy</scheme-name>\n
+        \       </cache-mapping>\n\n        <!-- CACHE SECURITY CONTEXT -->\n        <cache-mapping>\n
+        \           <cache-name>CACHE_SCRTYCTX</cache-name>\n            <scheme-name>cohi-proxy</scheme-name>\n
+        \       </cache-mapping>\n        \n        <!-- CACHE FLOWVARS -->\n        <cache-mapping>\n
+        \           <cache-name>DATA_*</cache-name>\n            <scheme-name>cohi-proxy</scheme-name>\n
+        \       </cache-mapping>\n\n        <!-- CACHES DE OBJETOS SEGUN TIEMPO DE VIDA
+        -->\n        <cache-mapping>\n            <cache-name>CACHE_PRES_BAJA_*</cache-name>\n
+        \           <scheme-name>cohi-proxy</scheme-name>\n        </cache-mapping>\n\n
+        \       <cache-mapping>\n            <cache-name>CACHE_PRES_MEDIA_*</cache-name>\n
+        \           <scheme-name>cohi-proxy</scheme-name>\n        </cache-mapping>\n\n
+        \       <cache-mapping>\n            <cache-name>CACHE_PRES_ALTA_*</cache-name>\n
+        \           <scheme-name>cohi-proxy</scheme-name>\n        </cache-mapping>\n\n
+        \       <cache-mapping>\n            <cache-name>CACHE_NUC_BAJA_*</cache-name>\n
+        \           <scheme-name>cohi-proxy</scheme-name>\n        </cache-mapping>\n\n
+        \       <cache-mapping>\n            <cache-name>CACHE_NUC_MEDIA_*</cache-name>\n
+        \           <scheme-name>cohi-proxy</scheme-name>\n        </cache-mapping>\n\n
+        \       <cache-mapping>\n            <cache-name>CACHE_NUC_ALTA_*</cache-name>\n
+        \           <scheme-name>cohi-proxy</scheme-name>\n        </cache-mapping>\n\n
+        \       <!-- CACHE DRO -->\n        <cache-mapping>\n            <cache-name>CACHE_DRO_*</cache-name>\n
+        \           <scheme-name>cohi-proxy</scheme-name>\n        </cache-mapping>\n\n
+        \       <!-- CACHE COMP COMUNES PRESENTACION -->\n        <cache-mapping>\n            <cache-name>T3_CCP_PERMANENTE</cache-name>\n
+        \           <scheme-name>cohi-proxy</scheme-name>\n        </cache-mapping>\n\n
+        \       <!-- CACHE OLA0 -->\n        <cache-mapping>\n            <cache-name>OSR-*</cache-name>\n
+        \           <scheme-name>cohi-proxy</scheme-name>\n        </cache-mapping>\n
+        \       <cache-mapping>\n            <cache-name>T3_FMK_BAJA_*</cache-name>\n
+        \           <scheme-name>cohi-proxy</scheme-name>\n        </cache-mapping>\n
+        \       <cache-mapping>\n            <cache-name>T3_NUC_BAJA_*</cache-name>\n
+        \           <scheme-name>cohi-proxy</scheme-name>\n        </cache-mapping>\n
+        \       <cache-mapping>\n            <cache-name>T3_FMK_MEDIA_*</cache-name>\n
+        \           <scheme-name>cohi-proxy</scheme-name>\n        </cache-mapping>\n
+        \       <cache-mapping>\n            <cache-name>T3_NUC_MEDIA_*</cache-name>\n
+        \           <scheme-name>cohi-proxy</scheme-name>\n        </cache-mapping>\n
+        \       <cache-mapping>\n            <cache-name>T3_FMK_ALTA_*</cache-name>\n
+        \           <scheme-name>cohi-proxy</scheme-name>\n        </cache-mapping>\n
+        \       <cache-mapping>\n            <cache-name>T3_NUC_ALTA_*</cache-name>\n
+        \           <scheme-name>cohi-proxy</scheme-name>\n        </cache-mapping>\n\n
+        \   </caching-scheme-mapping>\n\n    <caching-schemes>\n        <!-- Client Side
+        -->\n        <remote-cache-scheme>\n            <scheme-name>cohi-proxy</scheme-name>\n
+        \           <service-name>COHI-ExtendTcpProxyService</service-name>\n            <initiator-config>\n
+        \               <tcp-initiator>\n                    <remote-addresses>\n                        <socket-address>\n
+        \                           <address>enhol566.serv.dev.dc.es.telefonica</address>\n
+        \                           <port>26010</port>\n                        </socket-address>\n
+        \                       <socket-address>\n                            <address>enhol566.serv.dev.dc.es.telefonica</address>\n
+        \                           <port>26011</port>\n                        </socket-address>\n
+        \                   </remote-addresses>\n                </tcp-initiator>\n                <outgoing-message-handler>\n
+        \                   <request-timeout>2s</request-timeout>\n\t\t</outgoing-message-handler>\n\t\t<connect-timeout>2s</connect-timeout>\n
+        \           </initiator-config>\n        </remote-cache-scheme>\n    </caching-schemes>\n</cache-config>\n"
+    kind: ConfigMap
+    metadata:
+      creationTimestamp: null
+      name: tapv4-config

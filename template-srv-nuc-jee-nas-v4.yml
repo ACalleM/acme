@@ -1,6 +1,6 @@
 kind: Template
 metadata:
-  name: template-srv-nuc-jee-v4
+  name: template-srv-nuc-jee-nas-v4
   namespace: acoc-desa-bck
 objects:
   - apiVersion: v1
@@ -134,16 +134,24 @@ objects:
               volumeMounts:
                 - mountPath: /data/config
                   name: tapv4-config
+                - mountPath: '${TELCO_NAS_MOUNT_PATH}'
+                  name: 'telco-nas-${TELCO_NAS}'
           dnsPolicy: ClusterFirst
           restartPolicy: Always
           schedulerName: default-scheduler
-          securityContext: {}
+          securityContext:
+            supplementalGroups:
+              - 70002
+              - 316
           terminationGracePeriodSeconds: 30
           volumes:
             - configMap:
                 defaultMode: 420
                 name: tapv4-config
               name: tapv4-config
+            - name: 'telco-nas-${TELCO_NAS}'
+              persistentVolumeClaim:
+                claimName: 'pvc-telco-nas-${TELCO_NAS}'
       test: false
       triggers:
         - imageChangeParams:
@@ -251,3 +259,9 @@ parameters:
     name: ROLLING_MAX_UNAVAILABLE
     required: true
     value: '25%'
+  - description: Name of telco standard NAS. e.g. geal
+    name: TELCO_NAS
+    required: true
+  - description: Mount path of telco standard NAS. e.g. /apps/dataflow/nas/GEAL
+    name: TELCO_NAS_MOUNT_PATH
+    required: true

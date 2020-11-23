@@ -1,0 +1,28 @@
+kind: Template
+metadata:
+  name: template-pvc-telco-nas-v1
+  namespace: acoc-desa-bck
+objects:
+  - apiVersion: v1
+    kind: PersistentVolumeClaim
+    metadata:
+      name: pvc-telco-nas-${TELCO_NAS}
+    spec:
+      accessModes:
+      - ReadWriteMany
+      resources:
+        requests:
+          storage: '${REQUEST_SIZE}'
+      storageClassName: ""
+      volumeName: pv-${NAMESPACE}-telco-nas-${TELCO_NAS}
+parameters:
+  - description: Name of telco standard NAS. e.g. geal
+    name: TELCO_NAS
+    required: true
+  - description: 'Current namespace e.g.: acoc-inte-bck'
+    name: NAMESPACE
+    required: true
+  - description: The request size for the persistent volume claim.
+    name: REQUEST_SIZE
+    required: true
+    value: '10Gi'
