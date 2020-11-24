@@ -1,7 +1,5 @@
 # https://www.katacoda.com/courses/openshift/playgrounds/openshift46
 # git clone https://github.com/ACalleM/acme
-cd acme
-
 NAMESPACE_ACOC="acoc-desa-bck"
 NAMESPACE_DESTINO="tlc1-desa-bck"
 NAMESPACE_COMPILACION="imgb-desa-bck"
@@ -23,7 +21,7 @@ oc create -f template-configmap-tapv4-config-v1.yml -n ${NAMESPACE_ACOC}
 oc create -f template-pvc-telco-nas-v1.yml -n ${NAMESPACE_ACOC}
 oc create -f template-srv-nuc-jee-v4.yml -n ${NAMESPACE_ACOC}
 oc create -f template-srv-nuc-jee-nas-v4.yml -n ${NAMESPACE_ACOC}
-oc process template-configmap-tapv4-config-v1 -n ${NAMESPACE_ACOC}|oc create -n ${NAMESPACE_DESTINO} -f –
+oc process template-configmap-tapv4-config-v1 -n ${NAMESPACE_ACOC}|oc create -n ${NAMESPACE_DESTINO} -f -
 
 #JENKINS
 echo JENKINS
@@ -31,7 +29,7 @@ echo JENKINS
 oc get istag ${APLICACION}:${VERSION} -n ${NAMESPACE_DESTINO}
 oc get bc ${APLICACION} -n ${NAMESPACE_DESTINO}
 
-oc new-build --name ${IMAGEN} --binary=true --strategy=source --image-stream ${IMAGEN_BASE} --to ${APLICACION}:${VERSION_MAJOR} -n ${NAMESPACE_COMPILACION}
+oc new-build --name ${APLICACION} --binary=true --strategy=source --image-stream ${IMAGEN_BASE} --to ${APLICACION}:${VERSION_MAJOR} -n ${NAMESPACE_COMPILACION}
 oc start-build ${APLICACION} --from-file=${FICHERO} -n ${NAMESPACE_COMPILACION} --wait=true
 oc tag ${APLICACION}:${VERSION_MAJOR} ${APLICACION}:${VERSION} -n ${NAMESPACE_COMPILACION}
 
