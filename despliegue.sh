@@ -7,7 +7,7 @@
 
 inicio_tarea()
 {
-	read -rsp $'PULSA UNA TECLA PARA CONTINUAR...\n' -n1 key
+	read -rsp $'------------PULSA UNA TECLA PARA CONTINUAR\n' -n1 key
 	clear
 	echo ------------ $1
 }
@@ -39,7 +39,7 @@ inicio_tarea "INICIALIZACION NAMESPACES"
 oc process template-configmap-tapv4-config-v1 -n ${NAMESPACE_ACOC}|oc create -n ${NAMESPACE_DESTINO} -f -
 
 #JENKINS
-inicio_tarea "COMPROBACION BUILD"
+inicio_tarea "COMPROBACION EXISTENCIA BUILD"
 oc get istag ${APLICACION}:${VERSION} -n ${NAMESPACE_DESTINO}
 oc get bc ${APLICACION} -n ${NAMESPACE_DESTINO}
 
@@ -60,7 +60,7 @@ oc tag ${APLICACION}:${VERSION_MAJOR} ${APLICACION}:${VERSION} -n ${NAMESPACE_CO
 inicio_tarea "TAGEO IMAGEN ENTRE ENTORNOS"
 oc tag ${NAMESPACE_COMPILACION}/${APLICACION}:${VERSION} ${NAMESPACE_DESTINO}/${APLICACION}:${VERSION} ${NAMESPACE_DESTINO}/${APLICACION}:${VERSION_MAJOR}
 
-inicio_tarea "COMPROBACION DEPLOYMENT"
+inicio_tarea "COMPROBACION EXISTENCIA DEPLOYMENT"
 oc get dc ${APLICACION} -n ${NAMESPACE_DESTINO}
 
 inicio_tarea "CREACION DEPLOYMENT"
@@ -74,7 +74,7 @@ oc rollout status dc/${APLICACION} -n ${NAMESPACE_DESTINO}
 
 #CLARIVE PATCH
 inicio_tarea "MODIFICACION DEPLOYMENT"
-oc patch dc/${APLICACION} --patch "$(oc process ${TEMPLATE} -p APPLICATION_NAME=${APLICACION} -p VERSION_TAG=${VERSION} -p NAMESPACE=${NAMESPACE_DESTINO} -p DOMAIN_SUFFIX=.acme -p NUM_REPLICAS=2 -n ${NAMESPACE_ACOC} -o json | jq -c ‘.items[] | select(.kind=="DeploymentConfig") | del(.spec.template.spec.containers[].image)’)" -n ${NAMESPACE_DESTINO}
+oc patch dc/${APLICACION} --patch "$(oc process ${TEMPLATE} -p APPLICATION_NAME=${APLICACION} -p VERSION_TAG=${VERSION} -p NAMESPACE=${NAMESPACE_DESTINO} -p DOMAIN_SUFFIX=.acme -p NUM_REPLICAS=2 -n ${NAMESPACE_ACOC} -o json | jq -c '.items[] | select(.kind=="DeploymentConfig") | del(.spec.template.spec.containers[].image)')" -n ${NAMESPACE_DESTINO}
 
 inicio_tarea "MODIFICACION VARIABLES"
 oc set env dc/${APLICACION} --overwrite -e TZ=Europe/Madrid -e ACME=77 -n ${NAMESPACE_DESTINO}
