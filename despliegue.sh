@@ -22,11 +22,15 @@ oc new-project ${NAMESPACE_ACOC}
 oc new-project ${NAMESPACE_DESTINO}
 oc new-project ${NAMESPACE_COMPILACION}
 
+read -rsp $'Press any key to continue...\n' -n1 key
+
 echo CREACION TEMPLATES
 oc create -f template-configmap-tapv4-config-v1.yml -n ${NAMESPACE_ACOC}
 oc create -f template-pvc-telco-nas-v1.yml -n ${NAMESPACE_ACOC}
 oc create -f template-srv-nuc-jee-v4.yml -n ${NAMESPACE_ACOC}
 oc create -f template-srv-nuc-jee-nas-v4.yml -n ${NAMESPACE_ACOC}
+
+read -rsp $'Press any key to continue...\n' -n1 key
 
 echo EJECUCION TEMPLATES
 oc process template-configmap-tapv4-config-v1 -n ${NAMESPACE_ACOC}|oc create -n ${NAMESPACE_DESTINO} -f -
@@ -45,6 +49,8 @@ echo OBTENCION DETALLES BUILD
 oc logs bc/${APLICACION} -n ${NAMESPACE_COMPILACION}
 oc describe bc/${APLICACION} -n ${NAMESPACE_COMPILACION}
 
+read -rsp $'Press any key to continue...\n' -n1 key
+
 #CLARIVE
 echo TAGEO ENTRE ENTORNOS
 oc tag ${NAMESPACE_COMPILACION}/${APLICACION}:${VERSION} ${NAMESPACE_DESTINO}/${APLICACION}:${VERSION} ${NAMESPACE_DESTINO}/${APLICACION}:${VERSION_MAJOR}
@@ -57,9 +63,25 @@ oc rollout latest ${APLICACION} -n ${NAMESPACE_DESTINO}
 echo OBTENCION DETALLE DESPLIEGUE
 oc rollout status dc/${APLICACION} -n ${NAMESPACE_DESTINO}
 
-#CLARIVE PATCH
-oc patch dc/<nombre-despliegue>-<versiónmajor> --patch “$(oc process <nombre-template> -p <var-plantilla>=<valor> … -n <namespace_ACOC_segun_entorno> -o json | jq -c ‘.items[] | select(.kind=="DeploymentConfig") | del(.spec.template.spec.containers[].image)’)“ -n <namespace>
-oc set env dc/<nombre-despliegue>-<versiónmajor> --overwrite <var-entorno>=<valor> … -p <var-plantilla>=<valor> … -n <namespace>
-oc rollout latest <nombre-despliegue>-<versiónmajor> -n <namespace>
+read -rsp $'Press any key to continue...\n' -n1 key
 
-#oc rollback ${APLICACION} -n ${NAMESPACE_DESTINO}
+#CLARIVE PATCH
+echo MODIFICACION DEPLOYMENT
+oc patch dc/${APLICACION} --patch “$(oc process ${TEMPLATE} -p APPLICATION_NAME=${APLICACION} -p VERSION_TAG=${VERSION} -p NAMESPACE=${NAMESPACE_DESTINO} -p DOMAIN_SUFFIX=.acme -p NUM_REPLICAS=2 -n ${NAMESPACE_ACOC} -o json | jq -c ‘.items[] | select(.kind=="DeploymentConfig") | del(.spec.template.spec.containers[].image)’)“ -n ${NAMESPACE_DESTINO}
+
+read -rsp $'Press any key to continue...\n' -n1 key
+
+echo MODIFICACION VARIABLES
+oc set env dc/${APLICACION} --overwrite -e TZ=Europe/Madrid -e ACME=77 -n ${NAMESPACE_DESTINO}
+
+read -rsp $'Press any key to continue...\n' -n1 key
+
+echo REDESPLIEGUE
+oc rollout latest ${APLICACION} -n ${NAMESPACE_DESTINO}
+
+read -rsp $'Press any key to continue...\n' -n1 key
+
+echo ROLLBACK
+oc rollback ${APLICACION} -n ${NAMESPACE_DESTINO}
+
+echo FIN
