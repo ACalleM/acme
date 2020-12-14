@@ -64,7 +64,8 @@ inicio_tarea "COMPROBACION EXISTENCIA DEPLOYMENT"
 oc get dc ${APLICACION} -n ${NAMESPACE_DESTINO}
 
 inicio_tarea "CREACION DEPLOYMENT"
-oc new-app -e TZ=Europe/Madrid -p APPLICATION_NAME=${APLICACION} -p VERSION_TAG=${VERSION} -p NAMESPACE=${NAMESPACE_DESTINO} -p DOMAIN_SUFFIX=.acme -n ${NAMESPACE_DESTINO} --template ${NAMESPACE_ACOC}/${TEMPLATE}
+rem oc new-app -e TZ=Europe/Madrid -p APPLICATION_NAME=${APLICACION} -p VERSION_TAG=${VERSION_MAJOR} -p NAMESPACE=${NAMESPACE_DESTINO} -p DOMAIN_SUFFIX=.acme -n ${NAMESPACE_DESTINO} --template ${NAMESPACE_ACOC}/${TEMPLATE}
+oc new-app ${APLICACION}:${VERSION_MAJOR} ${APLICACION}:${VERSION_MAJOR}
 
 inicio_tarea "EJECUCION DEPLOYMENT"
 oc rollout latest ${APLICACION} -n ${NAMESPACE_DESTINO}
@@ -76,7 +77,7 @@ exit
 
 #CLARIVE PATCH
 inicio_tarea "MODIFICACION DEPLOYMENT"
-oc patch dc/${APLICACION} --patch "$(oc process ${TEMPLATE} -p APPLICATION_NAME=${APLICACION} -p VERSION_TAG=${VERSION} -p NAMESPACE=${NAMESPACE_DESTINO} -p DOMAIN_SUFFIX=.acme -p NUM_REPLICAS=2 -n ${NAMESPACE_ACOC} -o json | jq -c '.items[] | select(.kind=="DeploymentConfig") | del(.spec.template.spec.containers[].image)')" -n ${NAMESPACE_DESTINO}
+oc patch dc/${APLICACION} --patch "$(oc process ${TEMPLATE} -p APPLICATION_NAME=${APLICACION} -p VERSION_TAG=${VERSION_MAJOR} -p NAMESPACE=${NAMESPACE_DESTINO} -p DOMAIN_SUFFIX=.acme -p NUM_REPLICAS=2 -n ${NAMESPACE_ACOC} -o json | jq -c '.items[] | select(.kind=="DeploymentConfig") | del(.spec.template.spec.containers[].image)')" -n ${NAMESPACE_DESTINO}
 
 inicio_tarea "MODIFICACION VARIABLES"
 oc set env dc/${APLICACION} --overwrite -e TZ=Europe/Madrid -e ACME=77 -n ${NAMESPACE_DESTINO}
